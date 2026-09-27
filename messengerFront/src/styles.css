@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap');
+
+:root {
+	color-scheme: light;
+	--paper: #f8f8f2;
+	--ink: #20291f;
+	--line: #e4e5db;
+	--lime: #d5e58d;
+	--lime-deep: #849563;
+	--coral: #cf7158;
+	--body-font: 'DM Sans', 'Segoe UI', sans-serif;
+	--display-font: 'Fraunces', Georgia, serif;
+	--mono-font: 'DM Mono', Consolas, monospace;
+	font-family: var(--body-font);
+	color: var(--ink);
+	background: var(--paper);
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+* { box-sizing: border-box; }
+body { min-width: 320px; min-height: 100vh; margin: 0; }
+button,input,textarea { font-family: inherit; }
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible { outline: 2px solid #728453; outline-offset: 3px; }
+::selection { color: var(--ink); background: #dce9a4; }
