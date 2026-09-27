@@ -54,6 +54,23 @@ public class MessagingService {
         return messages.stream().map(this::toResponse).toList();
     }
 
+    @Transactional(readOnly = true)
+    public List<MessageResponse> conversation(@NonNull Long userId, @NonNull Long friendId) {
+        if (userId.equals(friendId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "A conversation requires another user");
+        }
+        if (!friendshipRepository.existsByOwner_IdAndFriend_Id(userId, friendId)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Conversation history is only available for friends");
+        }
+
+        long firstUserId = Math.min(userId, friendId);
+        long secondUserId = Math.max(userId, friendId);
+        String conversationId = firstUserId + "_" + secondUserId;
+        return messageRepository.findByConversationIdOrderByTimestampAscIdAsc(conversationId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     private MessageResponse toResponse(@NonNull StoredMessage message) {
         return new MessageResponse(message.getId(), message.getSender().getId(),
                 message.getRecipient().getId(), message.getContent(), message.getTimestamp());

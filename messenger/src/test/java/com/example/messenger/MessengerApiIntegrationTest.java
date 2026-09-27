@@ -122,6 +122,23 @@ class MessengerApiIntegrationTest {
                 .andExpect(jsonPath("$[0].content").value("Reply"))
                 .andExpect(jsonPath("$[0].userId").value(1));
 
+        mockMvc.perform(get("/api/messages/conversations/2")
+                        .header("Authorization", "Bearer " + senderToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].content").value("Hello"))
+                .andExpect(jsonPath("$[1].content").value("Reply"))
+                .andExpect(jsonPath("$[0].timestamp").value(sentAt.toString()));
+
+        mockMvc.perform(get("/api/messages/conversations/1")
+                        .header("Authorization", "Bearer " + recipientToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].senderId").value(1))
+                .andExpect(jsonPath("$[1].senderId").value(2));
+
+        mockMvc.perform(get("/api/messages/conversations/999")
+                        .header("Authorization", "Bearer " + senderToken))
+                .andExpect(status().isForbidden());
+
         mockMvc.perform(get("/api/messages/new"))
                 .andExpect(status().isUnauthorized());
     }

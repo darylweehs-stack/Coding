@@ -1,111 +1,102 @@
 @if (session(); as current) {
-  <div class="app-frame">
-    <aside class="sidebar">
-      <a class="brand" href="/" aria-label="Messenger home"><span class="brand-mark">m.</span><span>messenger</span></a>
-      <div class="sidebar-label">WORKSPACE</div>
-      <div class="nav-item nav-item-active"><span class="nav-indicator"></span>Inbox<span class="nav-count">{{ messages().length }}</span></div>
-      <div class="sidebar-bottom">
-        <div class="connection-status"><span></span> API connected</div>
-        <div class="account-row">
-          <div class="account-avatar">{{ current.username.slice(0, 1).toUpperCase() }}</div>
-          <div class="account-info"><strong>{{ current.username }}</strong><span>Account #{{ current.userId }}</span></div>
-          <button class="text-button" type="button" (click)="signOut()">Sign out</button>
-        </div>
-      </div>
-    </aside>
-
-    <main class="main-panel">
-      <header class="topbar">
-        <div class="breadcrumb"><span>Workspace</span><span class="breadcrumb-slash">/</span><strong>Inbox</strong></div>
-        <div class="topbar-actions">
-          <span class="secure-label"><span class="live-dot"></span> LIVE · EVERY SECOND</span>
-        </div>
+  <main class="messenger-shell" [class.mobile-chat-open]="selectedFriendId() !== null">
+    <aside class="chat-sidebar">
+      <header class="rail-header">
+        <a class="brand" href="/" aria-label="Messenger home"><span class="brand-mark">m.</span><span>messenger</span></a>
+        <span class="rail-kicker">MESSAGES</span>
       </header>
 
-      <div class="content-area">
-        <section class="page-heading">
-          <div><div class="eyebrow">YOUR MESSAGES</div><h1>Inbox<span class="heading-period">.</span></h1></div>
-          <div class="user-id-chip"><span>YOUR ID</span><strong>{{ current.userId }}</strong></div>
-        </section>
+      <div class="contact-heading"><h1>Chats</h1><span>{{ friends().length }}</span></div>
+      <label class="search-box">
+        <span aria-hidden="true">⌕</span>
+        <input name="friendSearch" type="search" placeholder="Search people" [(ngModel)]="friendSearch" />
+      </label>
 
-        @if (error()) { <div class="feedback feedback-error" role="alert">{{ error() }}</div> }
-        @if (inboxError()) { <div class="feedback feedback-error" role="alert">{{ inboxError() }}</div> }
-        @if (notice()) { <div class="feedback feedback-notice" role="status">{{ notice() }}</div> }
+      @if (error()) { <div class="rail-error" role="alert">{{ error() }}</div> }
+      @if (friends().length > 0) {
+        <nav class="contact-list" aria-label="Conversations">
+          @for (friend of visibleFriends; track friend.userId) {
+            <button class="contact-row" type="button" [class.contact-active]="selectedFriendId() === friend.userId" (click)="selectFriend(friend.userId)">
+              <span class="contact-avatar">{{ friend.username.slice(0, 1).toUpperCase() }}</span>
+              <span class="contact-copy">
+                <span class="contact-line"><strong>{{ friend.username }}</strong>@if (latestMessage(friend.userId); as latest) { <time>{{ latest.timestamp | date: 'h:mm a' }}</time> }</span>
+                <span class="contact-preview">{{ previewFor(friend.userId) }}</span>
+              </span>
+              @if (unreadCounts()[friend.userId]) { <span class="unread-badge">{{ unreadCounts()[friend.userId] }}</span> }
+            </button>
+          } @empty {
+            <div class="rail-empty">No matches. Try another name or user ID.</div>
+          }
+        </nav>
+      } @else {
+        <div class="rail-empty">Add a friend to start a conversation.</div>
+      }
 
-        <div class="workspace-grid">
-          <section class="inbox-section" aria-label="Received messages">
-            <section class="friends-section" aria-labelledby="friends-title">
-              <div class="section-heading friends-heading">
-                <div><h2 id="friends-title">Friends</h2><p>Add a user before messaging them</p></div>
-                <span class="message-count">{{ friends().length }} <span>added</span></span>
-              </div>
-              <form class="add-friend-form" (ngSubmit)="addFriend()">
-                <label for="friend-user-id">Add by user ID</label>
-                <div class="friend-input-row">
-                  <input id="friend-user-id" name="friendUserId" type="number" min="1" step="1" required placeholder="Enter user ID" [(ngModel)]="friendUserId" />
-                  <button class="quiet-button" type="submit" [disabled]="addingFriend() || !friendUserId">{{ addingFriend() ? 'Adding...' : 'Add friend' }}</button>
-                </div>
-              </form>
-              @if (friends().length > 0) {
-                <div class="friend-list">
-                  @for (friend of friends(); track friend.userId) {
-                    <button class="friend-item" type="button" [class.friend-selected]="selectedRecipientId === friend.userId" (click)="selectFriend(friend.userId)">
-                      <span class="friend-avatar">{{ friend.username.slice(0, 1).toUpperCase() }}</span>
-                      <span class="friend-details"><strong>{{ friend.username }}</strong><small>USER #{{ friend.userId }}</small></span>
-                      <span class="friend-action">Message <span aria-hidden="true">&#8594;</span></span>
-                    </button>
-                  }
-                </div>
-              } @else {
-                <p class="friends-empty">Your friend list is empty. Add someone by their account ID to start a conversation.</p>
-              }
-            </section>
-
-            <div class="section-heading">
-              <div><h2>Received</h2><p>Messages addressed to your account</p></div>
-              <span class="message-count">{{ messages().length }} <span>this session</span></span>
-            </div>
-            @if (messages().length > 0) {
-              <div class="message-list">
-                @for (message of messages(); track message.id) {
-                  <article class="message-row">
-                    <div class="message-avatar">{{ message.senderId }}</div>
-                    <div class="message-body">
-                      <div class="message-meta"><strong>User {{ message.senderId }}</strong><time>{{ message.timestamp | date: 'MMM d, y · h:mm a' }}</time></div>
-                      <p>{{ message.content }}</p>
-                    </div>
-                  </article>
-                }
-              </div>
-            } @else {
-              <div class="empty-state">
-                <div class="empty-mark">&#8595;</div><h3>Your inbox is clear</h3>
-                <p>New messages to your user ID will appear here automatically.</p>
-              </div>
-            }
-          </section>
-
-          <aside class="compose-section" aria-labelledby="compose-title">
-            <div class="compose-heading"><div class="compose-icon">+</div><div><div class="eyebrow">START A CONVERSATION</div><h2 id="compose-title">New message</h2></div></div>
-            <form (ngSubmit)="sendMessage()">
-              <label for="recipient">Send to friend</label>
-              <select id="recipient" name="recipientId" required [disabled]="friends().length === 0" [(ngModel)]="selectedRecipientId">
-                <option [ngValue]="null" disabled>Select a friend</option>
-                @for (friend of friends(); track friend.userId) {
-                  <option [ngValue]="friend.userId">{{ friend.username }} · #{{ friend.userId }}</option>
-                }
-              </select>
-              <label for="message">Your message</label>
-              <textarea id="message" name="messageContent" rows="6" maxlength="5000" required placeholder="Write something thoughtful..." [(ngModel)]="messageContent"></textarea>
-              <div class="compose-footer"><span>{{ messageContent.length }}/5000</span><button class="send-button" type="submit" [disabled]="sending() || !selectedRecipientId || !messageContent.trim()">{{ sending() ? 'Sending...' : 'Send message' }}<span aria-hidden="true">&#8594;</span></button></div>
-            </form>
-            <p class="delivery-note"><span></span> Only users on your friend list can be messaged</p>
-          </aside>
+      <form class="add-contact" (ngSubmit)="addFriend()">
+        <label for="friend-user-id">ADD A FRIEND</label>
+        <div class="add-contact-controls">
+          <input id="friend-user-id" name="friendUserId" type="number" min="1" step="1" required placeholder="User ID" [(ngModel)]="friendUserId" />
+          <button type="submit" title="Add friend" aria-label="Add friend" [disabled]="addingFriend() || !friendUserId">{{ addingFriend() ? '…' : '+' }}</button>
         </div>
-        <footer class="page-footer">MESSENGER <span>·</span> END-TO-END API SESSION</footer>
-      </div>
-    </main>
-  </div>
+      </form>
+
+      <footer class="rail-account">
+        <span class="account-avatar">{{ current.username.slice(0, 1).toUpperCase() }}</span>
+        <span class="account-info"><strong>{{ current.username }}</strong><small>Account #{{ current.userId }}</small></span>
+        <button class="text-button" type="button" (click)="signOut()">Sign out</button>
+      </footer>
+    </aside>
+
+    <section class="chat-panel" aria-label="Chat conversation">
+      @if (activeFriend; as friend) {
+        <header class="chat-header">
+          <button class="chat-back" type="button" aria-label="Back to conversations" (click)="selectFriend(null)">&#8592;</button>
+          <span class="contact-avatar contact-avatar-large">{{ friend.username.slice(0, 1).toUpperCase() }}</span>
+          <div class="chat-heading-copy"><h2>{{ friend.username }}</h2><p><span class="online-dot"></span>Live chat · User #{{ friend.userId }}</p></div>
+          <div class="chat-header-meta"><span class="live-pulse"></span><span>SYNCED</span></div>
+        </header>
+
+        @if (inboxError()) { <div class="chat-error" role="alert">{{ inboxError() }}</div> }
+        <div class="thread-panel" #threadPanel aria-live="polite" aria-relevant="additions text">
+          @if (activeMessages.length === 0) {
+            <div class="thread-intro"><span class="intro-avatar">{{ friend.username.slice(0, 1).toUpperCase() }}</span><strong>{{ friend.username }}</strong><span>This is the beginning of your conversation</span></div>
+            @if (historyLoading()) {
+              <div class="thread-loading">Loading conversation…</div>
+            } @else {
+              <div class="thread-empty">Say hello to {{ friend.username }}.</div>
+            }
+          } @else {
+            <div class="history-divider"><span>Conversation history</span></div>
+            @for (message of activeMessages; track message.id) {
+              <article class="chat-message" [class.message-outgoing]="isOutgoing(message)">
+                @if (!isOutgoing(message)) { <span class="message-sender">{{ friend.username }}</span> }
+                <p class="message-bubble">{{ message.content }}</p>
+                <time>{{ message.timestamp | date: 'h:mm a' }}</time>
+              </article>
+            }
+          }
+        </div>
+
+        @if (error()) { <div class="chat-error" role="alert">{{ error() }}</div> }
+        <form class="chat-composer" (ngSubmit)="sendMessage()">
+          <textarea
+            id="message"
+            name="messageContent"
+            rows="1"
+            maxlength="5000"
+            required
+            aria-label="Write a message"
+            placeholder="Message {{ friend.username }}..."
+            [(ngModel)]="messageContent"
+            (keydown.enter)="sendOnEnter($event)"
+          ></textarea>
+          <div class="composer-bottom"><span>Enter to send · Shift + Enter for a new line</span><button class="send-button" type="submit" title="Send message" aria-label="Send message" [disabled]="sending() || !messageContent.trim()">&#8593;</button></div>
+        </form>
+      } @else {
+        <div class="no-chat-selected"><div class="chat-mark">m.</div><h2>Your conversations</h2><p>Select a chat or add a friend to start messaging.</p></div>
+      }
+    </section>
+  </main>
 } @else {
   <main class="auth-layout">
     <section class="auth-aside">

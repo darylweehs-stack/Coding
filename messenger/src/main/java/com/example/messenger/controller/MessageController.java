@@ -8,6 +8,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,5 +36,12 @@ public class MessageController {
     @GetMapping("/new")
     public List<MessageResponse> receiveNew(@AuthenticationPrincipal Long recipientId) {
         return messagingService.receiveNew(recipientId);
+    }
+
+    @GetMapping("/conversations/{friendId}")
+    public List<MessageResponse> conversation(
+            @AuthenticationPrincipal Long userId,
+            @PathVariable Long friendId) {
+        return messagingService.conversation(userId, friendId);
     }
 }

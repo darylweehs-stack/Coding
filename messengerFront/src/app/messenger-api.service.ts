@@ -58,6 +58,12 @@ export class MessengerApiService {
     });
   }
 
+  conversation(session: TokenResponse, friendId: number): Observable<MessageResponse[]> {
+    return this.http.get<MessageResponse[]>(`/api/messages/conversations/${friendId}`, {
+      headers: this.authorization(session),
+    });
+  }
+
   send(session: TokenResponse, request: SendMessageRequest): Observable<MessageResponse> {
     return this.http.post<MessageResponse>('/api/messages/send', request, {
       headers: this.authorization(session),

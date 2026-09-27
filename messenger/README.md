@@ -22,6 +22,7 @@ Register and login return a bearer token. Include it as `Authorization: Bearer <
 | `GET` | `/api/friends` | List your friends |
 | `POST` | `/api/messages/send` | Send to a friend using the `userId` in the JSON body |
 | `GET` | `/api/messages/new` | Receive and mark all pending messages for the authenticated user as delivered |
+| `GET` | `/api/messages/conversations/{friendId}` | Retrieve the full history with a friend, oldest first |
 
 Example message body:
 
